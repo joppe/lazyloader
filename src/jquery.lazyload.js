@@ -7,8 +7,7 @@
         Point,
         Rect,
         Lazyloader,
-        Element,
-        Win,
+        Viewport,
         Img,
         uniqueId;
 
@@ -73,28 +72,11 @@
             }
 
             return contains;
-
-        }
-    };
-
-    Element = function ($el) {
-        this.$el = $el;
-    };
-    Element.prototype = {
-        getRect: function () {
-            var offset = this.$el.offset(),
-                top = offset.top,
-                left = offset.left,
-                height = this.$el.height(),
-                width = this.$el.width();
-
-            return new Rect(new Point(left, top), new Point(left + width, top + height));
         }
     };
 
     Img = function ($el) {
         this.$el = $el;
-        this.el = new Element(this.$el);
     };
     Img.prototype = {
         load: function () {
@@ -107,29 +89,36 @@
             this.$el.attr('src', this.$el.data('original'));
         },
         getRect: function () {
-            return this.el.getRect();
+            var offset = this.$el.offset(),
+                top = offset.top,
+                left = offset.left,
+                height = this.$el.height(),
+                width = this.$el.width();
+
+            return new Rect(new Point(left, top), new Point(left + width, top + height));
         }
     };
 
-    Win = (function () {
-        return {
-            getRect: function () {
-                var top = $win.scrollTop(),
-                    left = $win.scrollLeft(),
-                    height = $win.height(),
-                    width = $win.width();
+    Viewport = function ($el) {
+        this.$el = $el;
+    };
+    Viewport.prototype = {
+        getRect: function () {
+            var top = this.$el.scrollTop(),
+                left = this.$el.scrollLeft(),
+                height = this.$el.height(),
+                width = this.$el.width();
 
-                return new Rect(new Point(left, top), new Point(left + width, top + height));
-            }
-        };
-    }());
+            return new Rect(new Point(left, top), new Point(left + width, top + height));
+        }
+    };
 
     Lazyloader = function (viewport) {
         this.viewport = viewport;
         this.images = {};
         this.count = 0;
 
-        $win.on('scroll load resize', jQuery.proxy(this.checkImages, this));
+        this.viewport.$el.on('scroll load resize', jQuery.proxy(this.checkImages, this));
     };
     Lazyloader.prototype = {
         checkImages: function () {
@@ -149,16 +138,11 @@
     };
 
     $.fn.lazyLoad = function ($viewport) {
-        var viewport,
-            lazyloader;
+        var lazyloader;
 
-        if (undefined === $viewport) {
-            viewport = Win;
-        } else {
-            viewport = new Element($viewport);
-        }
+        $viewport = undefined === $viewport ? $win : $viewport;
 
-        lazyloader = new Lazyloader(viewport);
+        lazyloader = new Lazyloader(new Viewport($viewport));
 
         return this.each(function () {
             lazyloader.addImage($(this));

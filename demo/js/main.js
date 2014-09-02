@@ -1,5 +1,5 @@
 jQuery(function ($) {
     'use strict';
 
-    $('img').lazyLoad();
+    $('img').lazyLoad($('.wrapper'));
 });
