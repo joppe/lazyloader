@@ -98,6 +98,12 @@
     };
     Img.prototype = {
         load: function () {
+            var onload = jQuery.proxy(function () {
+                    this.$el.trigger('lazy-loaded');
+                    this.$el.off('load', onload);
+                }, this);
+
+            this.$el.on('load', onload);
             this.$el.attr('src', this.$el.data('original'));
         },
         getRect: function () {
